@@ -19,6 +19,9 @@ export const App = () => {
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
+    if (!query) {
+      return;
+    }
     async function dataImages(query, page) {
       setIsloading(true);
 
@@ -41,7 +44,9 @@ export const App = () => {
         setIsloading(false);
       }
     }
-    dataImages(query, page);
+    if (query !== null) {
+      dataImages(query, page);
+    }
   }, [query, page]);
  
   const handleInput = e => {
