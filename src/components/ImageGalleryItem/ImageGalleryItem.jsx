@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Modal } from 'components/Modal/Modal';
 import {
@@ -6,61 +6,53 @@ import {
   ImageGalleryItemImage,
 } from './ImageGalleryItem.styled';
 
-export class ImageGalleryItem extends Component {
-  state = {
-    showModal: false,
+export const ImageGalleryItem = ({ webformatURL, tags, largeImageURL }) => {
+  const [showModal, setShowModal] = useState(false);
+
+  const toggleModal = () => {
+    setShowModal(!showModal);
   };
 
-  componentDidMount() {
-    window.addEventListener('keydown', this.escapeClick);
-  }
+  useEffect(() => {
+    window.addEventListener('keydown', escapeClick);
+    return () => {
+      window.removeEventListener('keydown', escapeClick);
+    };
+  });
 
-  componentWillUnmount() {
-    window.removeEventListener('keydown', this.escapeClick);
-  }
-
-  escapeClick = event => {
-    if (this.state.showModal) {
+  const escapeClick = event => {
+    if (showModal) {
       if (event.code === 'Escape') {
-        this.toggleModal();
+        toggleModal();
       }
     }
   };
 
-  backdropClick = event => {
-    if (this.state.showModal) {
+  const backdropClick = event => {
+    if (showModal) {
       if (event.currentTarget === event.target) {
-        this.toggleModal();
+        toggleModal();
       }
     }
   };
 
-  toggleModal = () => {
-    this.setState(({ showModal }) => ({ showModal: !showModal }));
-  };
-
-  render() {
-    const { webformatURL, tags, largeImageURL } = this.props;
-    const { showModal } = this.state;
-
-    return (
-      <ImageGalleryItemLi>
-        <ImageGalleryItemImage
-          src={webformatURL}
-          alt={tags}
-          onClick={this.toggleModal}
+  return (
+    <ImageGalleryItemLi>
+      <ImageGalleryItemImage
+        src={webformatURL}
+        alt={tags}
+        onClick={toggleModal}
+      />
+      {showModal && (
+        <Modal
+          largeImageURL={largeImageURL}
+          tags={tags}
+          backdropClick={backdropClick}
         />
-        {showModal && (
-          <Modal
-            largeImageURL={largeImageURL}
-            tags={tags}
-            backdropClick={this.backdropClick}
-          />
-        )}
-      </ImageGalleryItemLi>
-    );
-  }
-}
+      )}
+    </ImageGalleryItemLi>
+  );
+};
 
 ImageGalleryItem.propTypes = {
   webformatURL: PropTypes.string.isRequired,

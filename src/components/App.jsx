@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import { fetchImages } from 'services/api.jsx';
 import { Searchbar } from 'components/Searchbar/Searchbar.jsx';
 import { ImageGallery } from 'components/ImageGallery/ImageGallery.jsx';
@@ -11,88 +11,70 @@ import {
   NotificationManager,
 } from 'react-notifications';
 
-export class App extends Component {
-  state = {
-    query: '',
-    page: 1,
-    images: [],
-    isLoading: false,
-    total: 0,
-  };
+export const App = () => {
+  const [query, setQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [images, setImages] = useState([]);
+  const [isLoading, setIsloading] = useState(false);
+  const [total, setTotal] = useState(0);
 
-  componentDidUpdate(_, prevState) {
-    const { page, query } = this.state;
-    if (prevState.page !== page || prevState.query !== query) {
-      this.dataImages(query, page);
-    }
-  }
+  useEffect(() => {
+    async function dataImages(query, page) {
+      setIsloading(true);
 
-  handleInput = e => {
-    this.setState({
-      page: 1,
-      query: e.searchQuery,
-      images: [],
-    });
-  };
-
-  loadMore = () => {
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-    }));
-  };
-
-  dataImages = async (query, page) => {
-    this.setState({ isLoading: true });
-
-    try {
-      const { data, totalHits } = await fetchImages(query, page);
-
-      if (totalHits === 0) {
-         NotificationManager.error(
-           'Pictures not found',
-           'Close after 4000ms',
-           4000
-         );
-      }
-        if (page === 1) {
-          this.setState(() => ({
-            total: totalHits,
-          }));
+      try {
+        const { data, totalHits } = await fetchImages(query, page);
+        
+        if (totalHits === 0) {
+          NotificationManager.error(
+            'Pictures not found'
+          );
         }
-      this.setState(state => ({
-        images: [...state.images, ...data],
-        isLoading: false,
-      }));
-    } catch (error) {
-     console.log('fetch error -', error)
-    } finally {
-      this.setState({ isLoading: false });
+        if (page === 1) {
+          setTotal(totalHits);
+        }
+        setImages(images => [...images, ...data]);
+        setIsloading(false);
+      } catch (error) {
+        console.log('fetch error -', error)
+      } finally {
+        setIsloading(false);
+      }
     }
+    dataImages(query, page);
+  }, [query, page]);
+ 
+  const handleInput = e => {
+    setPage(1);
+    setQuery(e.searchQuery);
+    setImages([]);
   };
 
-  render() {
-    const { images, isLoading, total } = this.state;
-    const showBtn = images.length > 0 && images.length < total && !isLoading;
+  const loadMore = () => {
+    setPage(page + 1)
+  };
 
-    return (
-      <Container>
-        <Searchbar onSubmit={this.handleInput} />
+  const showBtn = images.length > 0 && images.length < total && !isLoading;
 
-        {images && (
-          <>
-            {images.length === 0 && <NotificationContainer />}
+  return (
+    <Container>
+      <Searchbar onSubmit={handleInput} />
 
-            <ImageGallery items={images} />
+      {images && (
+        <>
+          {images.length === 0 && <NotificationContainer />}
 
-            {isLoading && <Loader>Loading</Loader>}
-            {showBtn && <Button onLoadMore={this.loadMore} />}
+          <ImageGallery items={images} />
 
-            {images.length === total && !!images.length && (
-              <Notify>No more pictures</Notify>
-            )}
-          </>
-        )}
-      </Container>
-    );
-  }
-}
+          {isLoading && <Loader>Loading</Loader>}
+          {showBtn && <Button onLoadMore={loadMore} />}
+
+          {images.length === total && !!images.length && (
+            <Notify>No more pictures</Notify>
+          )}
+        </>
+      )}
+    </Container>
+  );
+};
+
