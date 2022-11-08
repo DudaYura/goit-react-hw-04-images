@@ -39,14 +39,12 @@ export const App = () => {
         setImages(images => [...images, ...data]);
         setIsloading(false);
       } catch (error) {
-        console.log('fetch error -', error)
+        NotificationManager.error('Pictures not found');
       } finally {
         setIsloading(false);
       }
     }
-    if (query !== null) {
       dataImages(query, page);
-    }
   }, [query, page]);
  
   const handleInput = e => {
